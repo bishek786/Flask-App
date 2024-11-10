@@ -32,6 +32,20 @@ class DataBase():
         if self.__db :
             self.client_read.close()
             self.__db = False
+    
+    def uploadData(self,data:dict):
+        query = {'UniqueCode':data.get('UniqueCode')}
+        update = {'$set': data }
+        result:dict = self.userDB.find_one_and_update(query,update,return_document=True)
+        self.close()
+        # Check if a document was updated and print it
+        if result:
+            pass
+            # print("Updated document:", result)
+        else:
+            insert_doc = self.userDB.insert_one(data)
+            self.close()
+            # print("No document matched the filter criteria.")
 
 
 
