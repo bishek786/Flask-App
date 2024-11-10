@@ -1,9 +1,9 @@
 import os
-from quart import Quart, request, jsonify
+from fastapi import FastAPI, Request, Form
 from instamojo_wrapper import Instamojo
 from motor.motor_asyncio import AsyncIOMotorClient
 from dotenv import load_dotenv
-import asyncio
+from pydantic import BaseModel
 
 # Load environment variables
 load_dotenv()
@@ -11,8 +11,8 @@ load_dotenv()
 # Initialize Instamojo API
 api = Instamojo(api_key=os.getenv("API_KEY"), auth_token=os.getenv("AUTH_TOKEN"))
 
-# Initialize Quart app
-app = Quart(__name__)
+# Initialize FastAPI app
+app = FastAPI()
 
 # Initialize MongoDB async client
 class DataBase:
@@ -52,13 +52,13 @@ async def create_new_payment() -> str:
 async def get_payment_status(payment_request_id: str):
     return api.payment_request_status(payment_request_id)
 
-@app.route('/')
+@app.get("/")
 async def home():
-    return "Welcome to the Home Page!"
+    return {"message": "Welcome to the Home Page!"}
 
-@app.route('/Apna-Browser/Initialize-Payment', methods=['POST'])
-async def initialize_payment():
-    data = await request.json
+@app.post("/Apna-Browser/Initialize-Payment")
+async def initialize_payment(request: Request):
+    data = await request.json()
     payment_request_id = await create_new_payment()
     data.update({"payment_request_id": payment_request_id})
     await db.upload_data(data)
@@ -72,30 +72,20 @@ async def initialize_payment():
     else:
         webhook_data = {"error": "Payment request creation failed"}
 
-    return jsonify({"success": True, "message": webhook_data}), 200
+    return {"success": True, "message": webhook_data}
 
-@app.route('/Apna-Browser/Complete-Payment', methods=['POST'])
-async def complete_payment():
+@app.post("/Apna-Browser/Complete-Payment")
+async def complete_payment(payment_id: str = Form(...), payment_request_id: str = Form(...), status: str = Form(...)):
     try:
-        data = await request.form.to_dict()
-        payment_id = data.get('payment_id')
-        payment_request_id = data.get('payment_request_id')
-        status = data.get('status')
-
         if status == 'Credit':
             query = {'payment_request_id': payment_request_id}
-            update = {'$set': data}
+            update = {'$set': {"status": status, "payment_id": payment_id}}
             await db.collection.find_one_and_update(query, update)
         else:
             print(f"Payment {payment_id} failed or is pending.")
 
-        return jsonify({'status': 'received'}), 200
+        return {"status": "received"}
 
     except Exception as e:
         print(f"Error processing webhook: {str(e)}")
-        return jsonify({'status': 'error', 'message': str(e)}), 400
-
-# Run the Quart app with an async server like Hypercorn or Uvicorn for performance
-if __name__ == '__main__':
-    import uvicorn
-    uvicorn.run(app, host="localhost", port=5000)
+        return {"status": "error", "message": str(e)}
