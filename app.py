@@ -87,8 +87,10 @@ def InitializePayment():
     data:dict = request.json
     _id = createNewPayment()
     data.update({"payment_request_id":_id})
-    insert_doc = db.userDB.insert_one(data)
+    db.uploadData(data)
     db.close()
+    # insert_doc = db.userDB.insert_one(data)
+    # db.close()
     responseData = getPaymentStatus(_id)
 
     if responseData['success']:
