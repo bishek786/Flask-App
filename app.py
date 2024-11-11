@@ -78,12 +78,12 @@ def InitializePayment():
     # # Get JSON data from the incoming request
     Webhook = None
     data:dict = request.json
-    _id = createNewPayment()
+    payment_request = createNewPayment()
     
-    data.update({"payment_request_id":_id})
+    data.update(payment_request)
     db.uploadData(data)
     db.close()
-    responseData = getPaymentStatus(_id)
+    responseData = getPaymentStatus((payment_request['id']))
 
     if responseData['success']:
         Webhook = {'shorturl':responseData['payment_request']['shorturl'], "payment_request_id":responseData['payment_request']["id"]}
@@ -130,5 +130,3 @@ def CompletePayment():
 # Run the Flask app
 if __name__ == '__main__':
     host = "127.0.0.1"
-    port = 8080
-    app.run(host=host, port=port,debug=False)
