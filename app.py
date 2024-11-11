@@ -58,19 +58,12 @@ def createNewPayment()->str:
     allow_repeated_payments = False
     )
     if response['success']:
-        return response['payment_request']
+        return response['payment_request']['id']
     
 
 def getPaymentStatus(payment_request_id):
     response = api.payment_request_status(payment_request_id)
     return response
-
-
-
-
-
-
-
 
 
 
@@ -85,24 +78,17 @@ def InitializePayment():
     # # Get JSON data from the incoming request
     Webhook = None
     data:dict = request.json
-    _response = createNewPayment()
-    data.update(_response)
+    _id = createNewPayment()
+    
+    data.update({"payment_request_id":_id})
     db.uploadData(data)
     db.close()
-    responseData = getPaymentStatus(_response['id'])
+    responseData = getPaymentStatus(_id)
 
     if responseData['success']:
         Webhook = {'shorturl':responseData['payment_request']['shorturl'], "payment_request_id":responseData['payment_request']["id"]}
 
     return jsonify({"success": True, "message": Webhook}), 200
-
-
-
-
-
-
-
-
 
 
 # webhook url route
@@ -111,8 +97,9 @@ def CompletePayment():
     # Get JSON data from the incoming request
     try:
         data = request.form.to_dict()  # Instamojo typically sends data in form-encoded format
-        
         # Log or process the webhook data as needed
+        print(data)
+
         payment_id = data.get('payment_id')
         payment_request_id = data.get('payment_request_id')
         status = data.get('status')
@@ -142,4 +129,6 @@ def CompletePayment():
 
 # Run the Flask app
 if __name__ == '__main__':
-    app.run(debug=False)
+    host = "127.0.0.1"
+    port = 8080
+    app.run(host=host, port=port,debug=False)
