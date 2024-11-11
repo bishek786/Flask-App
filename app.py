@@ -58,7 +58,7 @@ def createNewPayment()->str:
     allow_repeated_payments = False
     )
     if response['success']:
-        return response['payment_request']['id']
+        return response['payment_request']
     
 
 def getPaymentStatus(payment_request_id):
