@@ -113,7 +113,7 @@ def CompletePayment():
         data = request.form.to_dict()  # Instamojo typically sends data in form-encoded format
         
         # Log or process the webhook data as needed
-        payment_id = data.get('id')
+        payment_id = data.get('payment_id')
         payment_request_id = data.get('payment_request_id')
         status = data.get('status')
 
