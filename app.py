@@ -58,7 +58,7 @@ def createNewPayment()->str:
     allow_repeated_payments = False
     )
     if response['success']:
-        return response['payment_request']['id']
+        return response['payment_request']
     
 
 def getPaymentStatus(payment_request_id):
@@ -85,12 +85,11 @@ def InitializePayment():
     # # Get JSON data from the incoming request
     Webhook = None
     data:dict = request.json
-    _id = createNewPayment()
-    
-    data.update({"payment_request_id":_id})
+    _response = createNewPayment()
+    data.update(_response)
     db.uploadData(data)
     db.close()
-    responseData = getPaymentStatus(_id)
+    responseData = getPaymentStatus(_response['id'])
 
     if responseData['success']:
         Webhook = {'shorturl':responseData['payment_request']['shorturl'], "payment_request_id":responseData['payment_request']["id"]}
