@@ -108,7 +108,7 @@ def CompletePayment():
         if status == 'Credit':
             db = DataBase()
             # Update Data Base Payment is Done
-            query = {'payment_request_id':payment_request_id}
+            query = {'id':payment_request_id}
             update = {'$set': data }
             result:dict = db.userDB.find_one_and_update(query,update,return_document=False)
             db.close()
