@@ -15,6 +15,13 @@ def thread_finc(data1:dict,payment_request):
     db.uploadData(data1)
 
 
+def thread_finc2(data1:dict):
+    payment_request_id = data1.get('payment_request_id') 
+    query = {'id':payment_request_id}
+    update = {'$set': data1}
+    db.userDB.find_one_and_update(query,update,return_document=False)
+
+
 class DataBase():
     def __init__(self):
         Username = os.getenv("DB_USERNAME")
@@ -36,7 +43,7 @@ class DataBase():
             result:dict = self.userDB.find_one_and_update(query,update,return_document=False)
         # Check if a document was updated and print it
             if not result:
-                insert_doc = self.userDB.insert_one(data)
+                self.userDB.insert_one(data)
 
 db = DataBase()
 
@@ -69,7 +76,6 @@ def home():
 def InitializePayment():
     # # Get JSON data from the incoming request
     data:dict = request.json
-    Webhook = None
     payment_request = createNewPayment()
     Webhook = {'longurl':payment_request['longurl'], "payment_request_id":payment_request["id"]}
 
@@ -86,18 +92,15 @@ def CompletePayment():
     try:
         data = request.form.to_dict()  # Instamojo typically sends data in form-encoded format
         # Log or process the webhook data as needed
-        # print(data)
 
         payment_id = data.get('payment_id')
-        payment_request_id = data.get('payment_request_id')
         status = data.get('status')
 
         # Process the data based on the payment status
         if status == 'Credit':
             # Update Data Base Payment is Done
-            query = {'id':payment_request_id}
-            update = {'$set': data }
-            result:dict = db.userDB.find_one_and_update(query,update,return_document=False)
+            thread2 = Thread(target=thread_finc2,args=(data))
+            thread2.start()
         else:
             # Handle payment failure or other statuses
             print(f"Payment {payment_id} failed or is pending.")
