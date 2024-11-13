@@ -99,7 +99,7 @@ def CompletePayment():
         # Process the data based on the payment status
         if status == 'Credit':
             # Update Data Base Payment is Done
-            thread2 = Thread(target=thread_finc2,args=(data))
+            thread2 = Thread(target=thread_finc2,args=(data,))
             thread2.start()
         else:
             # Handle payment failure or other statuses
