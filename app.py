@@ -10,12 +10,12 @@ load_dotenv()
 api = Instamojo(api_key=os.getenv("API_KEY"),auth_token=os.getenv("AUTH_TOKEN"))
 app = Flask(__name__)
 
-def thread_finc(data1:dict,payment_request):
+def thread_finc(db,data1:dict,payment_request):
     data1.update(payment_request)
     db.uploadData(data1)
 
 
-def thread_finc2(data1:dict):
+def thread_finc2(db,data1:dict):
     payment_request_id = data1.get('payment_request_id') 
     query = {'id':payment_request_id}
     update = {'$set': data1}
@@ -79,7 +79,7 @@ def InitializePayment():
     payment_request = createNewPayment()
     Webhook = {'longurl':payment_request['longurl'], "payment_request_id":payment_request["id"]}
 
-    thread1 = Thread(target=thread_finc,args=(data, payment_request))
+    thread1 = Thread(target=thread_finc,args=(db,data, payment_request))
     thread1.start()
 
     return jsonify({"success": True, "message": Webhook}), 200
@@ -99,7 +99,7 @@ def CompletePayment():
         # Process the data based on the payment status
         if status == 'Credit':
             # Update Data Base Payment is Done
-            thread2 = Thread(target=thread_finc2,args=(data,))
+            thread2 = Thread(target=thread_finc2,args=(db,data))
             thread2.start()
         else:
             # Handle payment failure or other statuses
@@ -122,3 +122,4 @@ if __name__ == '__main__':
     host = "127.0.0.1"
     port = 8080
     app.run(host=host, port=port,debug=False)
+    
